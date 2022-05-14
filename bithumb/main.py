@@ -22,9 +22,6 @@ class VolatilityWorker(QThread):
         ma5 = get_yesterday_ma5(self.ticker)
         target_price = get_target_price(self.ticker)
         wait_flag = False
-        
-        #출력1
-        self.tradingSent.emit(''+datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"), "1_target_price", str(target_price))
 
         while self.alive:
             try:
