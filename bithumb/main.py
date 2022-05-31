@@ -41,7 +41,6 @@ class CustomWorker(QThread):
                         currPrice = get_current_price(strTicker)
                      
                         if currPrice is not None : 
-                            self.tradingSent.emit(tstring, 'LOG', strTicker, str(currPrice), str(self.balance[0]))
                             #0. 내가 가진 코인 List에 추가
                             if  self.balance[0] is not None and self.balance[0] != 0 and (strTicker not in self.myCoinList):
                                 self.tradingSent.emit(tstring, 'LOG', strTicker, str(currPrice), str(self.balance[0]))
@@ -83,7 +82,7 @@ class MainWindow(QMainWindow, form_class):
         self.setupUi(self)
         self.ticker = "PLA"
         self.button.clicked.connect(self.clickBtn)
-
+        
         with open("bithumb.txt") as f:
             lines = f.readlines()
             apikey = lines[0].strip()
@@ -91,7 +90,7 @@ class MainWindow(QMainWindow, form_class):
             self.apiKey.setText(apikey)
             self.secKey.setText(seckey)
     
-    def changeUI(self, ticker):
+    def changeTicker(self, ticker):
         super().__init__(parent=None, ticker=ticker)
         self.setupUi(self)
         self.ticker = ticker
@@ -125,7 +124,9 @@ class MainWindow(QMainWindow, form_class):
         
     def receiveTradingSignal(self, time, buyOrSellType, ticker, price, count):
         self.textEdit.append(f"[{time}] [{buyOrSellType}] [{ticker}], {price} * {count}개")
-        self.ticker = ticker
+        self.widget_3.changeTicker(ticker)  #overView
+        self.widget.changeTicker(ticker)    #orderbook
+        self.widget_2.changeTicker(ticker)  #chart
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

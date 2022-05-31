@@ -26,7 +26,7 @@ class OrderbookWorker(QThread):
         self.alive = False
 
 class OrderbookWidget(QWidget):
-    def __init__(self, parent=None, ticker="BTC"):
+    def __init__(self, parent=None, ticker="PLA"):
         super().__init__(parent)
         uic.loadUi("resource/orderbook.ui", self)
         for i in range(self.tableBids.rowCount()):
@@ -69,6 +69,12 @@ class OrderbookWidget(QWidget):
         self.ow.dataSent.connect(self.updateData)
         self.ow.start()
 
+    def changeTicker(self, ticker):
+        self.ow.close()
+        self.ow = OrderbookWorker(ticker)
+        self.ow.dataSent.connect(self.updateData)
+        self.ow.start()
+
     def updateData(self, data):
         tradingBidValues = [ ]
         for v in data['bids']:
@@ -101,10 +107,10 @@ class OrderbookWidget(QWidget):
     def closeEvent(self, event):
         self.ow.close()
 
-if __name__ == "__main__":
-    import sys
-    from PyQt5.QtWidgets import QApplication
-    app = QApplication(sys.argv)
-    ow = OrderbookWidget()
-    ow.show()
-    exit(app.exec_())
+# if __name__ == "__main__":
+#     import sys
+#     from PyQt5.QtWidgets import QApplication
+#     app = QApplication(sys.argv)
+#     ow = OrderbookWidget()
+#     ow.show()
+#     exit(app.exec_())
