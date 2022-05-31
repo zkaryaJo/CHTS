@@ -3,9 +3,9 @@ from PyQt5 import uic
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from pybithumb import *
-from buy import *
-from sell import *
-from common import *
+from core.buy import *
+from core.sell import *
+from core.common import *
 
 form_class = uic.loadUiType("resource/main.ui")[0]
 
@@ -18,7 +18,6 @@ class SellCondition:
         self.a = a
 
 class CustomWorker(QThread):
-    mockTradingSent = pyqtSignal(str, str, str, str, str)
     tradingSent = pyqtSignal(str, str, str, str, str)
 
     def __init__(self, bithumb):
@@ -42,7 +41,7 @@ class CustomWorker(QThread):
                         currPrice = get_current_price(strTicker)
                      
                         if currPrice is not None : 
-
+                            self.tradingSent.emit(tstring, 'LOG', strTicker, str(currPrice), str(self.balance[0]))
                             #0. 내가 가진 코인 List에 추가
                             if  self.balance[0] is not None and self.balance[0] != 0 and (strTicker not in self.myCoinList):
                                 self.tradingSent.emit(tstring, 'LOG', strTicker, str(currPrice), str(self.balance[0]))
@@ -82,7 +81,7 @@ class MainWindow(QMainWindow, form_class):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.ticker = "BTC"
+        self.ticker = "PLA"
         self.button.clicked.connect(self.clickBtn)
 
         with open("bithumb.txt") as f:
@@ -91,7 +90,13 @@ class MainWindow(QMainWindow, form_class):
             seckey = lines[1].strip()
             self.apiKey.setText(apikey)
             self.secKey.setText(seckey)
-        
+    
+    def changeUI(self, ticker):
+        super().__init__(parent=None, ticker=ticker)
+        self.setupUi(self)
+        self.ticker = ticker
+        self.button.clicked.connect(self.clickBtn)
+
     def clickBtn(self):
         if self.button.text() == "매매시작":
             apiKey = self.apiKey.text()

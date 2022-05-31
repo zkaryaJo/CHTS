@@ -35,7 +35,7 @@ class OverViewWorker(QThread):
         self.alive = False
 
 class OverviewWidget(QWidget):
-    def __init__(self, parent=None, ticker="BTC"):
+    def __init__(self, parent=None, ticker="PLA"):
         super().__init__(parent)
         uic.loadUi("resource/overview.ui", self)
         self.ticker = ticker

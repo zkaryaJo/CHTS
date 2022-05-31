@@ -122,19 +122,19 @@
   <customwidget>
    <class>ChartWidget</class>
    <extends>QWidget</extends>
-   <header>chart</header>
+   <header>ui.chart</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>OrderbookWidget</class>
    <extends>QWidget</extends>
-   <header>orderbook</header>
+   <header>ui.orderbook</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>OverviewWidget</class>
    <extends>QWidget</extends>
-   <header>overview</header>
+   <header>ui.overview</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
