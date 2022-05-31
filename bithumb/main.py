@@ -3,7 +3,9 @@ from PyQt5 import uic
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from pybithumb import *
-from custom import *
+from buy import *
+from sell import *
+from common import *
 
 form_class = uic.loadUiType("resource/main.ui")[0]
 
@@ -16,7 +18,8 @@ class SellCondition:
         self.a = a
 
 class CustomWorker(QThread):
-    tradingSent = pyqtSignal(str, str, str)
+    mockTradingSent = pyqtSignal(str, str, str, str, str)
+    tradingSent = pyqtSignal(str, str, str, str, str)
 
     def __init__(self, bithumb):
         super().__init__()
@@ -25,35 +28,50 @@ class CustomWorker(QThread):
 
     def run(self):
 
-        try:
-            while self.alive:
+        self.myCoinList = {}
 
-                self.tickers = get_tickers()
-
+        while self.alive:
+            try:
+                self.tickers = get_tickers()        
                 for self.ticker in self.tickers :
-                    self.balance = self.bithumb.get_balance(str(self.ticker))
-                    tstring = get_now_to_string()
-
-                    self.currPrice = get_current_price(self.ticker)
-                    #self.tradingSent.emit(tstring, "ticker", str(self.ticker)+', '+str(self.currPrice) + ', available:'+str(self.balance[0]))
-
-                    #1. 매수
-                    if is_buy(self.bithumb, self.ticker, self.currPrice):
+                    try:
+                        strTicker = self.ticker
+                        self.balance = self.bithumb.get_balance(strTicker)
                         
-                        #desc = buy_crypto_currency(self.bithumb, self.ticker)
-                        #result = self.bithumb.get_order_completed(desc)
-                        #self.tradingSent.emit(get_timestamp_to_string(result['data']['order_date']), "임시매수", result['data']['order_qty'])
-                        #self.tradingSent.emit(tstring, "매수", result['data']['order_qty'])                    
-                        self.tradingSent.emit(tstring, "임시매수", get_current_price(self.ticker))
-                    
-                    if is_sell(self.bithumb, self.ticker, self.currPrice):
-                        #desc = sell_crypto_currency(self.bithumb, self.ticker)
-                        #result = self.bithumb.get_order_completed(desc)
-                        #self.tradingSent.emit(get_timestamp_to_string(result['data']['order_date']), "매도", result['data']['order_qty'])
-                        self.tradingSent.emit(tstring, "임시매도", str(get_current_price(self.ticker)))
-                    
-        except Exception as e:
-            print(e)
+                        tstring = get_now_to_string()
+                        currPrice = get_current_price(strTicker)
+                     
+                        if currPrice is not None : 
+
+                            #0. 내가 가진 코인 List에 추가
+                            if  self.balance[0] is not None and self.balance[0] != 0 and (strTicker not in self.myCoinList):
+                                self.tradingSent.emit(tstring, 'LOG', strTicker, str(currPrice), str(self.balance[0]))
+                                self.myCoinList[strTicker] = (900, self.balance[0])
+
+                            #1. 매수
+                            if strTicker not in self.myCoinList:
+                                if is_buy(self.bithumb, strTicker, currPrice):
+                                    #desc = buy_crypto_currency(self.bithumb, self.ticker)
+                                    #result = self.bithumb.get_order_completed(desc)
+                                    #self.tradingSent.emit(get_timestamp_to_string(result['data']['order_date']), "임시매수", result['data']['order_qty'])
+                                    #self.tradingSent.emit(tstring, "매수", result['data']['order_qty'])         
+                                    self.tradingSent.emit(tstring, '임시매수', strTicker, str(currPrice), str(self.balance[0]))
+                                    self.myCoinList[strTicker] = (currPrice, 1)
+                                    continue
+
+                            #2. 매도
+                            if strTicker in self.myCoinList:
+                                if is_sell(self.bithumb, strTicker, currPrice, self.myCoinList[strTicker][1]):
+                                    #desc = sell_crypto_currency(self.bithumb, self.ticker)
+                                    #result = self.bithumb.get_order_completed(desc)
+                                    #self.tradingSent.emit(get_timestamp_to_string(result['data']['order_date']), "매도", result['data']['order_qty'])
+                                    self.tradingSent.emit(tstring, '임시매도', strTicker, str(currPrice), str(self.balance[0]))
+                            
+                    except Exception as e:
+                        print(e)
+
+            except Exception as e:
+                print(e)
 
     def close(self):
         self.alive = False
@@ -100,8 +118,9 @@ class MainWindow(QMainWindow, form_class):
             self.button.setText("매매시작")
             self.cw.close()
         
-    def receiveTradingSignal(self, time, type, amount):
-        self.textEdit.append(f"[{time}] {type} : {amount}")
+    def receiveTradingSignal(self, time, buyOrSellType, ticker, price, count):
+        self.textEdit.append(f"[{time}] [{buyOrSellType}] [{ticker}], {price} * {count}개")
+        self.ticker = ticker
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
