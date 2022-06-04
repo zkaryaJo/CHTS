@@ -18,8 +18,8 @@ def is_sell(bithumb, ticker, currPrice, avgBuyPrice):
     # tVolume = df.iloc[-1]['volume']
 
 
-
     if currPrice > avgBuyPrice :
+        #print('[+] 상승 - 트레일링스탑 확인필요 현재가: ', str(currPrice), ', 매수단가: ',str(avgBuyPrice))
         #평균 매입단가 대비 3%이상 상승 고점대비 3%이상 하락
         if (
             is_up_by_average_buy_price_percent(avgBuyPrice, currPrice , 3) and 
@@ -28,10 +28,13 @@ def is_sell(bithumb, ticker, currPrice, avgBuyPrice):
             print('트레일링스탑')
             return True
     else:
+        #print('[-] 하락 - 손절여부 확인필요 현재가: ', str(currPrice), ', 매수단가: ',str(avgBuyPrice))
         #손절
         if is_down_by_average_buy_price_percent(avgBuyPrice, currPrice , 2):
             print('손절')
             return True
+
+    print('sell-456')
 
     return False
 
