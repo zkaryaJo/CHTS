@@ -5,6 +5,10 @@ def is_sell(bithumb, ticker, currPrice, avgBuyPrice):
 
     df = pybithumb.get_ohlcv(ticker)
 
+    if df is None :
+        print('[ERR] is Sell response is Crashed')
+        return False
+
     # yOpen = df.iloc[-2]['open']
     # yHigh = df.iloc[-2]['high']
     # yLow = df.iloc[-2]['low']
@@ -33,8 +37,6 @@ def is_sell(bithumb, ticker, currPrice, avgBuyPrice):
         if is_down_by_average_buy_price_percent(avgBuyPrice, currPrice , 2):
             print('손절')
             return True
-
-    print('sell-456')
 
     return False
 

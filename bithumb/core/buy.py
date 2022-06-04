@@ -8,6 +8,12 @@ def is_buy(bithumb, ticker, currPrice):
     trade_value_24H = float(tk['acc_trade_value_24H']) #24시간 거래대금
 
     df = pybithumb.get_ohlcv(ticker)
+
+    if tk is None or df is None:
+        print('[ERR] is Buy response is Crashed')
+        return False
+    
+
     
     # yOpen = df.iloc[-2]['open']
     # yHigh = df.iloc[-2]['high']

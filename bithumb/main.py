@@ -42,7 +42,7 @@ class CustomWorker(QThread):
                             currPrice = get_current_price(strSellMyTicker)
 
                             if currPrice is not None : 
-                                print('[-] Start Sell Process', strSellMyTicker, str(currPrice), str(self.myCoinList[strSellMyTicker][0]))
+                                print('[+] Sell? \t', strSellMyTicker+'\t\t', str(currPrice)+'\t\t\t\t', str(self.myCoinList[strSellMyTicker][0]))
                                 if is_sell(self.bithumb, strSellMyTicker, currPrice, self.myCoinList[strSellMyTicker][0]):
                                     #desc = sell_crypto_currency(self.bithumb, self.ticker)
                                     #result = self.bithumb.get_order_completed(desc)
@@ -61,7 +61,7 @@ class CustomWorker(QThread):
 
                             #1. 매수
                             if strTicker not in self.myCoinList:
-                                print('[+] Start Buy Process', strTicker, str(currPrice), '1')
+                                print('[+] Buy? \t', strTicker+'\t\t', str(currPrice)+'\t\t\t\t', '1')
                                 if is_buy(self.bithumb, strTicker, currPrice):
                                     #desc = buy_crypto_currency(self.bithumb, self.ticker)
                                     #result = self.bithumb.get_order_completed(desc)
