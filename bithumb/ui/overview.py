@@ -18,24 +18,25 @@ class OverViewWorker(QThread):
         wm = WebSocketManager("ticker", [f"{self.ticker}_KRW"], ["24H", "MID"])
         while self.alive:
             data = wm.get()
-
-            if data['content']['tickType'] == "MID":
-                self.dataMidSent.emit(float(data['content']['closePrice' ]),
-                                      float(data['content']['chgRate'    ]),
-                                      float(data['content']['volumePower']))
-            else:
-                self.data24Sent.emit(float(data['content']['closePrice'    ]),
-                                    float (data['content']['volume'        ]),
-                                    float (data['content']['highPrice'     ]),
-                                    float (data['content']['value'         ]),
-                                    float (data['content']['lowPrice'      ]),
-                                    float (data['content']['prevClosePrice']))
+            
+            if data is not None :
+                if data['content']['tickType'] == "MID":
+                    self.dataMidSent.emit(float(data['content']['closePrice' ]),
+                                        float(data['content']['chgRate'    ]),
+                                        float(data['content']['volumePower']))
+                else:
+                    self.data24Sent.emit(float(data['content']['closePrice'    ]),
+                                        float (data['content']['volume'        ]),
+                                        float (data['content']['highPrice'     ]),
+                                        float (data['content']['value'         ]),
+                                        float (data['content']['lowPrice'      ]),
+                                        float (data['content']['prevClosePrice']))
 
     def close(self):
         self.alive = False
 
 class OverviewWidget(QWidget):
-    def __init__(self, parent=None, ticker="PLA"):
+    def __init__(self, parent=None, ticker="BTC"):
         super().__init__(parent)
         uic.loadUi("resource/overview.ui", self)
         self.ticker = ticker
@@ -45,7 +46,7 @@ class OverviewWidget(QWidget):
         self.ovw.dataMidSent.connect(self.fillMidData)
         self.ovw.start()
 
-    def changeTicker(self, ticker):
+    def changeTicker(self, ticker='BTC'):
         self.ovw.close()
         self.ticker = ticker
         self.ovw = OverViewWorker(ticker)

@@ -4,6 +4,7 @@ import time
 from PyQt5 import uic
 from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QProgressBar
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from core.common import *
 
 class OrderbookWorker(QThread):
     dataSent = pyqtSignal(dict)
@@ -17,16 +18,17 @@ class OrderbookWorker(QThread):
         while self.alive:
             try:
                 data  = pybithumb.get_orderbook(self.ticker, limit=10)
-                time.sleep(0.05)
-                self.dataSent.emit(data)
-            except:
-                pass
+                time.sleep(1)
+                if data is not None :
+                    self.dataSent.emit(data)
+            except Exception as e:
+                log.info(e)
             
     def close(self):
         self.alive = False
 
 class OrderbookWidget(QWidget):
-    def __init__(self, parent=None, ticker="PLA"):
+    def __init__(self, parent=None, ticker="BTC"):
         super().__init__(parent)
         uic.loadUi("resource/orderbook.ui", self)
         for i in range(self.tableBids.rowCount()):
@@ -69,7 +71,7 @@ class OrderbookWidget(QWidget):
         self.ow.dataSent.connect(self.updateData)
         self.ow.start()
 
-    def changeTicker(self, ticker):
+    def changeTicker(self, ticker='BTC'):
         self.ow.close()
         self.ow = OrderbookWorker(ticker)
         self.ow.dataSent.connect(self.updateData)

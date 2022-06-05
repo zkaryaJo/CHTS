@@ -1,5 +1,6 @@
 import datetime
 import pybithumb
+import logging
 
 #파라미터로 들어온 timeStamp를 현재시간으로
 def get_timestamp_to_string(ts):
@@ -36,5 +37,21 @@ def get_yesterday_ma5(ticker):
     close = df['close']
     ma = close.rolling(5).mean()
     return ma[-2]
+
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+log = logging.getLogger()
+log.setLevel(logging.INFO)
+
+# stream_handler = logging.StreamHandler()
+# stream_handler.setFormatter(formatter)
+# logger.addHandler(stream_handler)
+
+file_handler = logging.FileHandler('log\logfile_{:%Y%m%d}.log'.format(datetime.datetime.now()), encoding='utf-8')
+file_handler.setFormatter(formatter)
+log.addHandler(file_handler)
+
+
 
 

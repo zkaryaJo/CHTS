@@ -6,6 +6,7 @@ from PyQt5.QtChart import QLineSeries, QChart, QValueAxis, QDateTimeAxis
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt, QDateTime, QThread, pyqtSignal
 import pybithumb
+from core.common import *
 
 class PriceWorker(QThread):
     dataSent = pyqtSignal(float)
@@ -19,16 +20,17 @@ class PriceWorker(QThread):
         while self.alive:
             try:
                 data  = pybithumb.get_current_price(self.ticker)
-                time.sleep(0.2)
-                self.dataSent.emit(data)
-            except:
-                pass
+                time.sleep(1)
+                if data is not None :
+                    self.dataSent.emit(data)
+            except Exception as e:
+                log.info(e)
 
     def close(self):
         self.alive = False
 
 class ChartWidget(QWidget):
-    def __init__(self, parent=None, ticker="PLA"):
+    def __init__(self, parent=None, ticker="BTC"):
         super().__init__(parent)
         uic.loadUi("resource/chart.ui", self)
         self.ticker = ticker
@@ -64,7 +66,7 @@ class ChartWidget(QWidget):
         self.priceData.attachAxis(axisY)
         self.priceChart.layout().setContentsMargins(0, 0, 0, 0)
 
-    def changeTicker(self, ticker):
+    def changeTicker(self, ticker='BTC'):
         self.pw.close()
         self.pw = PriceWorker(ticker)
         self.pw.dataSent.connect(self.appendData)

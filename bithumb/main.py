@@ -40,36 +40,37 @@ class CustomWorker(QThread):
                         for strSellMyTicker in self.myCoinList:
                             tstring = get_now_to_string()
                             currPrice = get_current_price(strSellMyTicker)
+                            avgBuyPrice = self.myCoinList[strSellMyTicker][0]
+                            count = self.myCoinList[strSellMyTicker][1]
 
-                            if currPrice is not None : 
-                                print('[+] Sell? \t', strSellMyTicker+'\t\t', str(currPrice)+'\t\t\t\t', str(self.myCoinList[strSellMyTicker][0]))
-                                if is_sell(self.bithumb, strSellMyTicker, currPrice, self.myCoinList[strSellMyTicker][0]):
-                                    #desc = sell_crypto_currency(self.bithumb, self.ticker)
-                                    #result = self.bithumb.get_order_completed(desc)
-                                    #self.tradingSent.emit(get_timestamp_to_string(result['data']['order_date']), "매도", result['data']['order_qty'])
-                                    self.tradingSent.emit(tstring, '임시매도', strSellMyTicker, str(currPrice), str(self.myCoinList[strSellMyTicker][1]))
-
-                        tstring = get_now_to_string()
-                        currPrice = get_current_price(strTicker)
-                        self.balance = self.bithumb.get_balance(strTicker)
-                        
-                        if currPrice is not None : 
-                            #0. 내가 가진 코인 List에 추가
-                            if  self.balance[0] is not None and self.balance[0] != 0 and (strTicker not in self.myCoinList):
-                                self.tradingSent.emit(tstring, 'LOG', strTicker, str(currPrice), str(self.balance[0]))
-                                self.myCoinList[strTicker] = (791.8, self.balance[0])
-
-                            #1. 매수
-                            if strTicker not in self.myCoinList:
-                                print('[+] Buy? \t', strTicker+'\t\t', str(currPrice)+'\t\t\t\t', '1')
-                                if is_buy(self.bithumb, strTicker, currPrice):
-                                    #desc = buy_crypto_currency(self.bithumb, self.ticker)
-                                    #result = self.bithumb.get_order_completed(desc)
-                                    #self.tradingSent.emit(get_timestamp_to_string(result['data']['order_date']), "임시매수", result['data']['order_qty'])
-                                    #self.tradingSent.emit(tstring, "매수", result['data']['order_qty'])         
-                                    self.tradingSent.emit(tstring, '임시매수', strTicker, str(currPrice), str(1))
-                                    self.myCoinList[strTicker] = (currPrice, 1)                                
+                            if currPrice is not None and strSellMyTicker is not None : 
+                                if is_sell(self.bithumb, strSellMyTicker, currPrice, avgBuyPrice):
+                                    log.info('[+] 임시매도'+'\t'+strSellMyTicker+'\t'+str(currPrice)+'\t'+str(count))
+                                    self.tradingSent.emit(tstring, '임시매도', strSellMyTicker, str(currPrice), str(count))
+                                    self.myCoinList.pop(strSellMyTicker)
+                        if strTicker is not None :
+                            tstring = get_now_to_string()
+                            currPrice = get_current_price(strTicker)
+                            self.balance = self.bithumb.get_balance(strTicker)
                             
+                            if currPrice is not None : 
+                                #0. 내가 가진 코인 List에 추가
+                                if  self.balance[0] is not None and self.balance[0] != 0 and (strTicker not in self.myCoinList):
+                                    if strTicker == 'PLA' :
+                                        pass
+                                        #self.tradingSent.emit(tstring, 'LOG', strTicker, str(791.8), str(self.balance[0]))
+                                        #self.myCoinList[strTicker] = (791.8, self.balance[0])
+                                    else :
+                                        self.tradingSent.emit(tstring, 'LOG', strTicker, str(currPrice), str(self.balance[0]))
+                                        self.myCoinList[strTicker] = (currPrice, self.balance[0])
+
+                                #1. 매수
+                                if strTicker not in self.myCoinList:
+                                    if is_buy(self.bithumb, strTicker, currPrice):
+                                        log.info('[+] 임시매수'+'\t'+strTicker+'\t'+str(currPrice)+'\t'+str(1))
+                                        self.tradingSent.emit(tstring, '임시매수', strTicker, str(currPrice), str(1))
+                                        self.myCoinList[strTicker] = (currPrice, 1)                                
+                                
                     except Exception as e:
                         print(e)
 
@@ -85,7 +86,7 @@ class MainWindow(QMainWindow, form_class):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.ticker = "PLA"
+        self.ticker = "BTC"
         self.button.clicked.connect(self.clickBtn)
         
         with open("bithumb.txt") as f:
@@ -129,9 +130,10 @@ class MainWindow(QMainWindow, form_class):
         
     def receiveTradingSignal(self, time, buyOrSellType, ticker, price, count):
         self.textEdit.append(f"[{time}] [{buyOrSellType}] [{ticker}], {price} * {count}개")
-        self.widget_3.changeTicker(ticker)  #overView
-        self.widget.changeTicker(ticker)    #orderbook
-        self.widget_2.changeTicker(ticker)  #chart
+        if ticker is not None:
+            self.widget_3.changeTicker(ticker)  #overView
+            self.widget.changeTicker(ticker)    #orderbook
+            self.widget_2.changeTicker(ticker)  #chart
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
