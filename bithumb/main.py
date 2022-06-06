@@ -35,7 +35,7 @@ class CustomWorker(QThread):
 
                 for strTicker in self.tickers :
                     try:
-
+                        
                         #1. 매도
                         for strSellMyTicker in self.myCoinList:
                             tstring = get_now_to_string()
@@ -46,7 +46,7 @@ class CustomWorker(QThread):
                             if currPrice is not None and strSellMyTicker is not None : 
                                 if is_sell(self.bithumb, strSellMyTicker, currPrice, avgBuyPrice):
                                     log.info('[+] 임시매도'+'\t'+strSellMyTicker+'\t'+str(currPrice)+'\t'+str(count))
-                                    self.tradingSent.emit(tstring, '임시매도', strSellMyTicker, str(currPrice), str(count))
+                                    self.tradingSent.emit(tstring, '임시매도', strSellMyTicker, "매도:"+str(currPrice)+", 평균매수가:"+str(avgBuyPrice), str(count))
                                     self.myCoinList.pop(strSellMyTicker)
                         if strTicker is not None :
                             tstring = get_now_to_string()
@@ -79,6 +79,7 @@ class CustomWorker(QThread):
 
     def close(self):
         self.alive = False
+        pushToSlack("------- END -------")
 
 
 
@@ -88,7 +89,7 @@ class MainWindow(QMainWindow, form_class):
         self.setupUi(self)
         self.ticker = "BTC"
         self.button.clicked.connect(self.clickBtn)
-        
+
         with open("bithumb.txt") as f:
             lines = f.readlines()
             apikey = lines[0].strip()
@@ -118,7 +119,9 @@ class MainWindow(QMainWindow, form_class):
 
             self.button.setText("매매중지")
             self.textEdit.append("------ START ------")
-            self.textEdit.append(f"보유 현금 : {self.balance[2]} 원") 
+            self.textEdit.append(f"보유 현금 : {self.balance[2]} 원")
+
+            pushToSlack(f"------ START ------\n보유 현금 : {self.balance[2]} 원")
 
             self.cw = CustomWorker(self.bithumb)
             self.cw.tradingSent.connect(self.receiveTradingSignal)
@@ -129,11 +132,12 @@ class MainWindow(QMainWindow, form_class):
             self.cw.close()
         
     def receiveTradingSignal(self, time, buyOrSellType, ticker, price, count):
-        self.textEdit.append(f"[{time}] [{buyOrSellType}] [{ticker}], {price} * {count}개")
+        self.textEdit.append(f"[{time}] [{buyOrSellType}] [{ticker}] > {price} {count}개")
+        pushToSlack(f"[{time}] [{buyOrSellType}] [{ticker}] > {price} {count}개")
         if ticker is not None:
-            self.widget_3.changeTicker(ticker)  #overView
-            self.widget.changeTicker(ticker)    #orderbook
-            self.widget_2.changeTicker(ticker)  #chart
+            self.widget_ovv.changeTicker(ticker)  #overView
+            self.widget_odb.changeTicker(ticker)  #orderbook
+            self.widget_cht.changeTicker(ticker)  #chart
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

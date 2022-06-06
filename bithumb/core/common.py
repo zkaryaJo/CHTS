@@ -1,6 +1,8 @@
 import datetime
 import pybithumb
 import logging
+import json
+import requests
 
 #파라미터로 들어온 timeStamp를 현재시간으로
 def get_timestamp_to_string(ts):
@@ -38,20 +40,22 @@ def get_yesterday_ma5(ticker):
     ma = close.rolling(5).mean()
     return ma[-2]
 
-
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
+#로그
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')    
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-
-# stream_handler = logging.StreamHandler()
-# stream_handler.setFormatter(formatter)
-# logger.addHandler(stream_handler)
-
 file_handler = logging.FileHandler('log\logfile_{:%Y%m%d}.log'.format(datetime.datetime.now()), encoding='utf-8')
 file_handler.setFormatter(formatter)
 log.addHandler(file_handler)
 
+#슬랙
+webhook_url = "https://hooks.slack.com/services/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"
 
-
-
+def pushToSlack(content):
+    payload = {"text": content}
+    try:
+        requests.post(
+            webhook_url, data=json.dumps(payload),headers={'Content-Type': 'application/json'}
+        )
+    except Exception as e:
+        log.info(e)

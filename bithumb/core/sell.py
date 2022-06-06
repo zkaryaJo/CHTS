@@ -33,11 +33,13 @@ def is_sell(bithumb, ticker, currPrice, avgBuyPrice):
                 is_down_by_high_price_percent(tHigh, currPrice, 2)
             ): 
                 log.info('트레일링스탑')
+                pushToSlack('[+]익절 trailing stop')
                 return True
         elif currPrice < avgBuyPrice :
             #print('[-] 하락 - 손절여부 확인필요 현재가: ', str(currPrice), ', 매수단가: ',str(avgBuyPrice))
             #손절
             if is_down_by_average_buy_price_percent(avgBuyPrice, currPrice , 2):
+                pushToSlack('[-]손절 stop loss')
                 log.info('손절')
                 return True
         else :
